@@ -88,4 +88,4 @@ Behavioral data tracked each month for every active customer.
 - pandas, numpy -- data manipulation
 - scikit-learn -- machine learning
 - matplotlib, seaborn -- visualization
-- faker -- synthetic data generation
+- faker -- synthetic data generation (SUBJECT TO CHANGE)
