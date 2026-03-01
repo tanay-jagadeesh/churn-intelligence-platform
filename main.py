@@ -7,7 +7,7 @@ import argparse
 
 from src.generators import generate_customers, generate_monthly_activity
 from src.features import build_features
-from src.model import train_model, evaluate_model, get_feature_importance
+from src.model import train_model, evaluate_model, get_feature_importance, segment_risk
 from src.utils import save_csv, load_csv, save_model
 
 
@@ -55,6 +55,20 @@ def train_and_evaluate():
     print("\nTop 10 Most Important Features")
     importance = get_feature_importance(model, X_test.columns.tolist())
     print(importance.head(10).to_string(index=False))
+
+    print("\n Risk Segmentation")
+    risk_df = segment_risk(model, features)
+    save_csv(risk_df, "risk_segments.csv")
+
+    tier_counts = risk_df["risk_tier"].value_counts()
+    for tier in ["High", "Medium", "Low"]:
+        count = tier_counts.get(tier, 0)
+        pct = count / len(risk_df)
+        print(f"  {tier:6s}: {count:4d} customers ({pct:.1%})")
+
+    print("Top 10 Highest-Risk Customers:")
+    top10 = risk_df.head(10)[["customer_id", "churn_probability", "risk_tier", "recommended_action"]]
+    print(top10.to_string(index=False))
 
 
 def main():
