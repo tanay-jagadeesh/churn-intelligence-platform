@@ -95,3 +95,56 @@ def segment_risk(model, features_df: pd.DataFrame) -> pd.DataFrame:
     })
 
     return result.sort_values("churn_probability", ascending=False).reset_index(drop=True)
+
+
+RETENTION_RATES = {
+    "High": 0.30,
+    "Medium": 0.50,
+    "Low": 0.0,  # no action taken, no change
+}
+
+
+def calculate_retention_roi(risk_df: pd.DataFrame, customers_df: pd.DataFrame) -> dict:
+    """
+    Estimate the revenue impact of churn and the value of retention efforts.
+    """
+
+    merged = risk_df.merge(
+        customers_df[["customer_id", "monthly_charge"]],
+        on="customer_id",
+        how="left",
+    )
+
+    roi = {}
+    total_at_risk_monthly = 0.0
+    total_saved_monthly = 0.0
+
+    for tier in ["High", "Medium", "Low"]:
+        tier_data = merged[merged["risk_tier"] == tier]
+        count = len(tier_data)
+        monthly_revenue = tier_data["monthly_charge"].sum()
+        annual_revenue = monthly_revenue * 12
+        retention_rate = RETENTION_RATES[tier]
+        saved_monthly = monthly_revenue * retention_rate
+        saved_annual = saved_monthly * 12
+
+        roi[tier] = {
+            "customer_count": count,
+            "monthly_revenue_at_risk": round(monthly_revenue, 2),
+            "annual_revenue_at_risk": round(annual_revenue, 2),
+            "expected_retention_rate": retention_rate,
+            "monthly_revenue_saved": round(saved_monthly, 2),
+            "annual_revenue_saved": round(saved_annual, 2),
+        }
+
+        total_at_risk_monthly += monthly_revenue
+        total_saved_monthly += saved_monthly
+
+    roi["total"] = {
+        "monthly_revenue_at_risk": round(total_at_risk_monthly, 2),
+        "annual_revenue_at_risk": round(total_at_risk_monthly * 12, 2),
+        "monthly_revenue_saved": round(total_saved_monthly, 2),
+        "annual_revenue_saved": round(total_saved_monthly * 12, 2),
+    }
+
+    return roi

@@ -7,7 +7,7 @@ import argparse
 
 from src.generators import generate_customers, generate_monthly_activity
 from src.features import build_features
-from src.model import train_model, evaluate_model, get_feature_importance, segment_risk
+from src.model import train_model, evaluate_model, get_feature_importance, segment_risk, calculate_retention_roi
 from src.utils import save_csv, load_csv, save_model
 
 
@@ -69,6 +69,21 @@ def train_and_evaluate():
     print("Top 10 Highest-Risk Customers:")
     top10 = risk_df.head(10)[["customer_id", "churn_probability", "risk_tier", "recommended_action"]]
     print(top10.to_string(index=False))
+
+    # Retention ROI — estimate revenue impact of churn and value of intervening
+    print("\n--- Retention ROI Analysis ---")
+    roi = calculate_retention_roi(risk_df, customers)
+
+    print(f"\n  {'Tier':<8} {'Customers':>10} {'Monthly At Risk':>16} {'Annual At Risk':>15} {'Retention':>10} {'Annual Saved':>13}")
+    print(f"  {'----':<8} {'----------':>10} {'---------------':>16} {'--------------':>15} {'---------':>10} {'------------':>13}")
+    for tier in ["High", "Medium", "Low"]:
+        t = roi[tier]
+        print(f"  {tier:<8} {t['customer_count']:>10} ${t['monthly_revenue_at_risk']:>14,.2f} ${t['annual_revenue_at_risk']:>13,.2f} {t['expected_retention_rate']:>9.0%} ${t['annual_revenue_saved']:>11,.2f}")
+
+    total = roi["total"]
+    print(f"\n  Total revenue at risk:  ${total['annual_revenue_at_risk']:>12,.2f}/year")
+    print(f"  Projected savings:     ${total['annual_revenue_saved']:>12,.2f}/year")
+    print(f"  ROI of retention:       {total['annual_revenue_saved']/max(total['annual_revenue_at_risk'], 1):.1%} of at-risk revenue recovered")
 
 
 def main():
