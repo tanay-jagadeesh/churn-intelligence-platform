@@ -10,8 +10,8 @@ import pandas as pd
 from faker import Faker
 
 from config.schema import (
-    ACQUISITION_CHANNELS,
-    ACQUISITION_WEIGHTS,
+    ACQ_CHANNELS,
+    ACQ_WEIGHTS,
     AGE_MAX,
     AGE_MEAN,
     AGE_MIN,
@@ -82,7 +82,7 @@ def generate_customers(num_customers: int = NUM_CUSTOMERS, seed: int = RANDOM_SE
             "signup_date": signup_date,
             "plan_type": plan,
             "monthly_charge": monthly_charge,
-            "acquisition_channel": rng.choice(ACQUISITION_CHANNELS, p=ACQUISITION_WEIGHTS),
+            "acquisition_channel": rng.choice(ACQ_CHANNELS, p=ACQ_WEIGHTS),
             "contract_type": contract,
             "churned": churned,
             "churn_date": churn_date,
